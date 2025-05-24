@@ -34,11 +34,11 @@ export const LINES_PER_LEVEL = 10;
 
 // Key mappings
 export const KEY_CODES = {
-  LEFT: 'ArrowLeft',
-  RIGHT: 'ArrowRight',
-  DOWN: 'ArrowDown',
-  UP: 'ArrowUp', // Rotate
-  SPACE: ' ', // Hard drop
-  P: 'p', // Pause
-  ESCAPE: 'Escape', // Pause
+  LEFT: "ArrowLeft",
+  RIGHT: "ArrowRight",
+  DOWN: "ArrowDown",
+  UP: "ArrowUp", // Rotate
+  SPACE: " ", // Hard drop
+  P: "p", // Pause
+  ESCAPE: "Escape", // Pause
 };

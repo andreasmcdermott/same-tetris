@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
-import { BOARD_HEIGHT, BOARD_WIDTH } from '../constants/gameConstants';
-import { TETROMINOS, TetrominoType, randomTetromino } from '../constants/tetrominos';
+import { useCallback, useEffect, useState, useRef } from "react";
+import { BOARD_HEIGHT, BOARD_WIDTH } from "../constants/gameConstants";
+import {
+  TETROMINOS,
+  TetrominoType,
+  randomTetromino,
+} from "../constants/tetrominos";
 
 // Define the cell type for the game board
 export type Cell = {
@@ -16,11 +20,11 @@ export type Position = {
 };
 
 // Local storage key for high score
-const HIGH_SCORE_KEY = 'tetris-high-score';
+const HIGH_SCORE_KEY = "tetris-high-score";
 
 // Function to get the high score from localStorage
 const getHighScore = (): number => {
-  if (typeof localStorage !== 'undefined') {
+  if (typeof localStorage !== "undefined") {
     const savedScore = localStorage.getItem(HIGH_SCORE_KEY);
     return savedScore ? parseInt(savedScore, 10) : 0;
   }
@@ -29,7 +33,7 @@ const getHighScore = (): number => {
 
 // Function to save high score to localStorage
 const saveHighScore = (score: number): void => {
-  if (typeof localStorage !== 'undefined') {
+  if (typeof localStorage !== "undefined") {
     const currentHighScore = getHighScore();
     if (score > currentHighScore) {
       localStorage.setItem(HIGH_SCORE_KEY, score.toString());
@@ -40,7 +44,7 @@ const saveHighScore = (score: number): void => {
 // Create an empty game board
 export const createEmptyBoard = (): Cell[][] =>
   Array.from({ length: BOARD_HEIGHT }, () =>
-    Array.from({ length: BOARD_WIDTH }, () => ({ filled: false, color: '' }))
+    Array.from({ length: BOARD_WIDTH }, () => ({ filled: false, color: "" })),
   );
 
 // Hook for managing the game board
@@ -49,9 +53,16 @@ export const useGameBoard = () => {
   const [board, setBoard] = useState<Cell[][]>(createEmptyBoard());
 
   // Current tetromino state
-  const [currentTetromino, setCurrentTetromino] = useState<TetrominoType>(randomTetromino());
-  const [nextTetromino, setNextTetromino] = useState<TetrominoType>(randomTetromino());
-  const [position, setPosition] = useState<Position>({ row: 0, col: Math.floor(BOARD_WIDTH / 2) - 2 });
+  const [currentTetromino, setCurrentTetromino] = useState<TetrominoType>(
+    randomTetromino(),
+  );
+  const [nextTetromino, setNextTetromino] = useState<TetrominoType>(
+    randomTetromino(),
+  );
+  const [position, setPosition] = useState<Position>({
+    row: 0,
+    col: Math.floor(BOARD_WIDTH / 2) - 2,
+  });
   const [rotation, setRotation] = useState<number>(0);
 
   // Game state
@@ -102,7 +113,7 @@ export const useGameBoard = () => {
   const getRotatedTetromino = useCallback(() => {
     const tetrominoShape = TETROMINOS[currentTetromino].shape;
     const size = tetrominoShape.length;
-    let rotatedShape = [...tetrominoShape.map(row => [...row])];
+    let rotatedShape = [...tetrominoShape.map((row) => [...row])];
 
     // Apply rotation (0, 1, 2, or 3 times 90 degrees)
     for (let r = 0; r < rotation % 4; r++) {
@@ -120,7 +131,11 @@ export const useGameBoard = () => {
 
   // Check if the current tetromino can move to a position
   const isValidMove = useCallback(
-    (newRow: number, newCol: number, rotatedTetromino = getRotatedTetromino()) => {
+    (
+      newRow: number,
+      newCol: number,
+      rotatedTetromino = getRotatedTetromino(),
+    ) => {
       // If we're animating, don't allow movement
       if (isAnimating) return false;
 
@@ -154,88 +169,137 @@ export const useGameBoard = () => {
 
       return true;
     },
-    [board, getRotatedTetromino, isAnimating]
+    [board, getRotatedTetromino, isAnimating],
   );
 
   // Clear completed lines with animation
-  const clearCompletedLines = useCallback((newBoard: Cell[][], completedRows: number[]) => {
-    if (completedRows.length === 0) return newBoard;
+  const clearCompletedLines = useCallback(
+    (newBoard: Cell[][], completedRows: number[]) => {
+      if (completedRows.length === 0) return newBoard;
 
-    // Set animation state
-    setIsAnimating(true);
-    setAnimatingRows(completedRows);
+      // Set animation state
+      setIsAnimating(true);
+      setAnimatingRows(completedRows);
 
-    // Animate the rows that will be cleared
-    const animatedBoard = [...newBoard.map(row => [...row])];
-    for (const rowIndex of completedRows) {
-      for (let col = 0; col < BOARD_WIDTH; col++) {
-        animatedBoard[rowIndex][col] = {
-          ...animatedBoard[rowIndex][col],
-          clearing: true
-        };
-      }
-    }
-
-    // Update the board with animation
-    setBoard(animatedBoard);
-
-    // Wait for animation to complete before actually removing rows
-    setTimeout(() => {
-      // Remove completed rows
-      const updatedBoard = [...animatedBoard.map(row => [...row])];
-      for (let i = completedRows.length - 1; i >= 0; i--) {
-        const row = completedRows[i];
-        updatedBoard.splice(row, 1);
+      // Animate the rows that will be cleared
+      const animatedBoard = [...newBoard.map((row) => [...row])];
+      for (const rowIndex of completedRows) {
+        for (let col = 0; col < BOARD_WIDTH; col++) {
+          animatedBoard[rowIndex][col] = {
+            ...animatedBoard[rowIndex][col],
+            clearing: true,
+          };
+        }
       }
 
-      // Add new empty rows at the top
-      for (let i = 0; i < completedRows.length; i++) {
-        updatedBoard.unshift(Array.from({ length: BOARD_WIDTH }, () => ({ filled: false, color: '' })));
-      }
+      // Update the board with animation
+      setBoard(animatedBoard);
 
-      // Update the board
-      setBoard(updatedBoard);
+      // Wait for animation to complete before actually removing rows
+      setTimeout(() => {
+        // Remove completed rows
+        const updatedBoard = [...animatedBoard.map((row) => [...row])];
+        for (let i = completedRows.length - 1; i >= 0; i--) {
+          const row = completedRows[i];
+          updatedBoard.splice(row, 1);
+        }
 
-      // Update lines and score
-      const newLines = lines + completedRows.length;
-      setLines(newLines);
+        // Add new empty rows at the top
+        for (let i = 0; i < completedRows.length; i++) {
+          updatedBoard.unshift(
+            Array.from({ length: BOARD_WIDTH }, () => ({
+              filled: false,
+              color: "",
+            })),
+          );
+        }
 
-      // Calculate score based on number of lines cleared
-      let points = 0;
-      switch (completedRows.length) {
-        case 1: points = 100 * level; break;
-        case 2: points = 300 * level; break;
-        case 3: points = 500 * level; break;
-        case 4: points = 800 * level; break;
-        default: break;
-      }
+        // Update the board
+        setBoard(updatedBoard);
 
-      setScore(prev => prev + points);
+        // Update lines and score
+        const newLines = lines + completedRows.length;
+        setLines(newLines);
 
-      // Check level up
-      if (Math.floor(newLines / 10) > Math.floor(lines / 10)) {
-        setLevel(prev => prev + 1);
-      }
+        // Calculate score based on number of lines cleared
+        let points = 0;
+        switch (completedRows.length) {
+          case 1:
+            points = 100 * level;
+            break;
+          case 2:
+            points = 300 * level;
+            break;
+          case 3:
+            points = 500 * level;
+            break;
+          case 4:
+            points = 800 * level;
+            break;
+          default:
+            break;
+        }
 
-      // Reset animation state
-      setIsAnimating(false);
-      setAnimatingRows([]);
+        setScore((prev) => prev + points);
 
-      // Get next tetromino
-      setCurrentTetromino(nextTetromino);
-      setNextTetromino(randomTetromino());
-      setPosition({ row: 0, col: Math.floor(BOARD_WIDTH / 2) - 2 });
-      setRotation(0);
-    }, 500); // Animation duration
+        // Check level up
+        if (Math.floor(newLines / 10) > Math.floor(lines / 10)) {
+          setLevel((prev) => prev + 1);
+        }
 
-    return animatedBoard;
-  }, [level, lines, nextTetromino]);
+        // Reset animation state
+        setIsAnimating(false);
+        setAnimatingRows([]);
+
+        // Get next tetromino
+        const newTetromino = nextTetromino;
+        const newNextTetromino = randomTetromino();
+        const newPosition = { row: 0, col: Math.floor(BOARD_WIDTH / 2) - 2 };
+        
+        // Check if new tetromino can be placed at starting position
+        const newTetrominoShape = TETROMINOS[newTetromino].shape;
+        let canPlace = true;
+        for (let r = 0; r < newTetrominoShape.length; r++) {
+          for (let c = 0; c < newTetrominoShape[r].length; c++) {
+            if (newTetrominoShape[r][c] !== 0) {
+              const boardRow = newPosition.row + r;
+              const boardCol = newPosition.col + c;
+              if (
+                boardRow >= 0 &&
+                boardRow < BOARD_HEIGHT &&
+                boardCol >= 0 &&
+                boardCol < BOARD_WIDTH &&
+                newBoard[boardRow][boardCol].filled
+              ) {
+                canPlace = false;
+                break;
+              }
+            }
+          }
+          if (!canPlace) break;
+        }
+        
+        if (!canPlace) {
+          setGameOver(true);
+          return;
+        }
+        
+        setCurrentTetromino(newTetromino);
+        setNextTetromino(newNextTetromino);
+        setPosition(newPosition);
+        setRotation(0);
+      }, 500); // Animation duration
+
+      return animatedBoard;
+    },
+    [level, lines, nextTetromino],
+  );
 
   // Implement the actual placeTetromino function
   placeTetromino.current = () => {
     const shape = getRotatedTetromino();
     const tetrominoColor = TETROMINOS[currentTetromino].color;
-    const newBoard = [...board.map(row => [...row])];
+    const newBoard = [...board.map((row) => [...row])];
 
     // Add the tetromino to the board
     for (let r = 0; r < shape.length; r++) {
@@ -251,8 +315,16 @@ export const useGameBoard = () => {
           }
 
           // Update the board
-          if (boardRow >= 0 && boardRow < BOARD_HEIGHT && boardCol >= 0 && boardCol < BOARD_WIDTH) {
-            newBoard[boardRow][boardCol] = { filled: true, color: tetrominoColor };
+          if (
+            boardRow >= 0 &&
+            boardRow < BOARD_HEIGHT &&
+            boardCol >= 0 &&
+            boardCol < BOARD_WIDTH
+          ) {
+            newBoard[boardRow][boardCol] = {
+              filled: true,
+              color: tetrominoColor,
+            };
           }
         }
       }
@@ -261,7 +333,7 @@ export const useGameBoard = () => {
     // Check for completed lines
     const completedRows: number[] = [];
     for (let r = 0; r < BOARD_HEIGHT; r++) {
-      if (newBoard[r].every(cell => cell.filled)) {
+      if (newBoard[r].every((cell) => cell.filled)) {
         completedRows.push(r);
       }
     }
@@ -274,9 +346,41 @@ export const useGameBoard = () => {
       setBoard(newBoard);
 
       // Get next tetromino
-      setCurrentTetromino(nextTetromino);
-      setNextTetromino(randomTetromino());
-      setPosition({ row: 0, col: Math.floor(BOARD_WIDTH / 2) - 2 });
+      const newTetromino = nextTetromino;
+      const newNextTetromino = randomTetromino();
+      const newPosition = { row: 0, col: Math.floor(BOARD_WIDTH / 2) - 2 };
+      
+      // Check if new tetromino can be placed at starting position
+      const newTetrominoShape = TETROMINOS[newTetromino].shape;
+      let canPlace = true;
+      for (let r = 0; r < newTetrominoShape.length; r++) {
+        for (let c = 0; c < newTetrominoShape[r].length; c++) {
+          if (newTetrominoShape[r][c] !== 0) {
+            const boardRow = newPosition.row + r;
+            const boardCol = newPosition.col + c;
+            if (
+              boardRow >= 0 &&
+              boardRow < BOARD_HEIGHT &&
+              boardCol >= 0 &&
+              boardCol < BOARD_WIDTH &&
+              newBoard[boardRow][boardCol].filled
+            ) {
+              canPlace = false;
+              break;
+            }
+          }
+        }
+        if (!canPlace) break;
+      }
+      
+      if (!canPlace) {
+        setGameOver(true);
+        return;
+      }
+      
+      setCurrentTetromino(newTetromino);
+      setNextTetromino(newNextTetromino);
+      setPosition(newPosition);
       setRotation(0);
     }
   };
@@ -284,14 +388,21 @@ export const useGameBoard = () => {
   // Update the placeTetromino dependency whenever relevant state changes
   useEffect(() => {
     // No need to do anything here, just ensuring the ref is updated when dependencies change
-  }, [board, currentTetromino, nextTetromino, position, getRotatedTetromino, clearCompletedLines]);
+  }, [
+    board,
+    currentTetromino,
+    nextTetromino,
+    position,
+    getRotatedTetromino,
+    clearCompletedLines,
+  ]);
 
   // Move the tetromino left
   const moveLeft = useCallback(() => {
     if (isAnimating || isPaused || gameOver) return false;
 
     if (isValidMove(position.row, position.col - 1)) {
-      setPosition(prev => ({ ...prev, col: prev.col - 1 }));
+      setPosition((prev) => ({ ...prev, col: prev.col - 1 }));
       return true;
     }
     return false;
@@ -302,7 +413,7 @@ export const useGameBoard = () => {
     if (isAnimating || isPaused || gameOver) return false;
 
     if (isValidMove(position.row, position.col + 1)) {
-      setPosition(prev => ({ ...prev, col: prev.col + 1 }));
+      setPosition((prev) => ({ ...prev, col: prev.col + 1 }));
       return true;
     }
     return false;
@@ -342,14 +453,22 @@ export const useGameBoard = () => {
     const kicks = [-1, 1, -2, 2];
     for (const kick of kicks) {
       if (isValidMove(position.row, position.col + kick, rotatedTetromino)) {
-        setPosition(prev => ({ ...prev, col: prev.col + kick }));
+        setPosition((prev) => ({ ...prev, col: prev.col + kick }));
         setRotation(newRotation);
         return true;
       }
     }
 
     return false;
-  }, [currentTetromino, position, rotation, isPaused, gameOver, isValidMove, isAnimating]);
+  }, [
+    currentTetromino,
+    position,
+    rotation,
+    isPaused,
+    gameOver,
+    isValidMove,
+    isAnimating,
+  ]);
 
   // Move the tetromino down (soft drop)
   const moveDown = useCallback(() => {
@@ -360,7 +479,7 @@ export const useGameBoard = () => {
 
     // Try to move down
     if (isValidMove(position.row + 1, position.col)) {
-      setPosition(prev => ({ ...prev, row: prev.row + 1 }));
+      setPosition((prev) => ({ ...prev, row: prev.row + 1 }));
       return true;
     }
 
@@ -389,7 +508,7 @@ export const useGameBoard = () => {
     setPosition({ row: newRow, col: position.col });
 
     // Add points for the hard drop
-    setScore(prev => prev + (dropDistance * 2)); // 2 points per cell for hard drop
+    setScore((prev) => prev + dropDistance * 2); // 2 points per cell for hard drop
 
     // Place the tetromino at the new position
     // We need to call this outside the current render cycle to ensure position is updated
@@ -403,7 +522,7 @@ export const useGameBoard = () => {
   // Toggle pause state
   const togglePause = useCallback(() => {
     if (!gameOver && !isAnimating) {
-      setIsPaused(prev => !prev);
+      setIsPaused((prev) => !prev);
     }
   }, [gameOver, isAnimating]);
 

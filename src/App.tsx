@@ -1,4 +1,4 @@
-import { TetrisGame } from './components/TetrisGame';
+import { TetrisGame } from "./components/TetrisGame";
 
 function App() {
   return (

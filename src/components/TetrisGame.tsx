@@ -1,4 +1,4 @@
-import { GameBoard } from './GameBoard';
+import { GameBoard } from "./GameBoard";
 
 export const TetrisGame = () => {
   return (
@@ -20,9 +20,7 @@ export const TetrisGame = () => {
         <p>
           Use arrow keys to move, Up to rotate, Space to hard drop, P to pause
         </p>
-        <p className="mt-1">
-          © {new Date().getFullYear()} React Tetris Game
-        </p>
+        <p className="mt-1">© {new Date().getFullYear()} React Tetris Game</p>
       </footer>
     </div>
   );
